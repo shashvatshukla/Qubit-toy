@@ -2,8 +2,8 @@
 
 
 a = Analysis(
-    ['qubit_toy.py'],
-    pathex=[],
+    ['src/qubit_toy.py'],
+    pathex=['src'],
     binaries=[],
     datas=[],
     hiddenimports=[],

@@ -22,9 +22,33 @@ def measure_x(s):
     return Q.PLUS if random.random() < pp else Q.MINUS
 
 
-qubit_value     = Q.ZERO
-qubit_lit       = None   # Q | None
-qubit_flash_end = 0
+# --- Level definitions ---
+# Each level is a list of Q values the player must light up in sequence.
+LEVELS = [
+    [Q.ZERO,  Q.ZERO,  Q.ZERO,  Q.ZERO,  Q.ZERO],
+    [Q.ONE,   Q.ONE,   Q.ONE,   Q.ONE,   Q.ONE],
+    [Q.PLUS,  Q.PLUS,  Q.PLUS,  Q.PLUS,  Q.PLUS],
+    [Q.MINUS, Q.MINUS, Q.MINUS, Q.MINUS, Q.MINUS],
+    [Q.ONE,   Q.ONE,   Q.ONE,   Q.ZERO,  Q.ZERO],
+    [Q.ONE,   Q.ONE,   Q.ZERO,  Q.ZERO,  Q.ONE],
+    [Q.PLUS,  Q.PLUS,  Q.MINUS, Q.MINUS, Q.MINUS],
+    [Q.PLUS,  Q.MINUS, Q.MINUS, Q.MINUS, Q.PLUS],
+    [Q.ZERO,  Q.PLUS,  Q.ZERO,  Q.PLUS],
+    [Q.ZERO,  Q.PLUS,  Q.ZERO,  Q.PLUS,  Q.ZERO,  Q.PLUS],
+    [Q.ZERO,  Q.PLUS,  Q.ZERO,  Q.PLUS,  Q.ZERO,  Q.PLUS,  Q.ZERO,  Q.PLUS,  Q.ZERO,  Q.PLUS,  Q.ZERO,  Q.PLUS],
+    [Q.ONE,   Q.MINUS, Q.ONE,   Q.MINUS, Q.ONE,   Q.MINUS, Q.ONE,   Q.MINUS, Q.ONE,   Q.MINUS, Q.ONE,   Q.MINUS],
+    [Q.ZERO,  Q.PLUS,  Q.ONE,   Q.MINUS, Q.ZERO,  Q.PLUS,  Q.ONE,   Q.MINUS],
+]
+
+current_level  = 0
+level_progress = 0   # number of steps correctly lit so far
+
+
+# --- Qubit state ---
+qubit_value          = Q.ZERO
+qubit_lit            = None
+qubit_flash_end      = 0
+level_complete_until = 0   # nonzero while showing the 1.5s completion flash
 
 LIGHT_DEFS = {
     Q.ZERO:  {"label": "0",      "color_on": (100, 200, 255), "color_off": ( 30,  60,  80)},
@@ -34,6 +58,9 @@ LIGHT_DEFS = {
 }
 LIGHT_RADIUS = 28
 LIGHT_GLOW_R = 54
+
+DOT_RADIUS = 10
+DOT_GAP    = 30
 
 
 def get_light_positions():
@@ -58,6 +85,27 @@ def get_qubit_btn_rects():
     mx  = pygame.Rect(ex + 46, ey - bh // 2, bw, bh)
     had = pygame.Rect(mx.x, mz.y, bw, bh)
     return mz, mx, had
+
+def get_level_dot_positions():
+    import qubit_toy as qt
+    w, _ = qt.screen.get_size()
+    n = len(LEVELS[current_level])
+    margin = 18
+    end_x = w - margin - DOT_RADIUS
+    start_x = end_x - (n - 1) * DOT_GAP
+    return [(start_x + i * DOT_GAP, 28) for i in range(n)]
+
+def get_nav_arrow_rects():
+    import qubit_toy as qt
+    w, _ = qt.screen.get_size()
+    bw, bh = 44, 28
+    # anchor to same right edge as dots
+    margin = 18
+    right_edge = w - margin
+    right = pygame.Rect(right_edge - bw,          62, bw, bh)
+    left  = pygame.Rect(right_edge - bw * 2 - 8,  62, bw, bh)
+    return left, right
+
 
 def _draw_glow_circle(surf, cx, cy, radius, color, glow_radius, glow_color):
     glow_surf = pygame.Surface((glow_radius * 2, glow_radius * 2), pygame.SRCALPHA)
@@ -92,27 +140,88 @@ def draw_qubit_screen():
     qt.draw_btn(mx,  'measure_x', (80, 50, 20),  (255, 180, 60),  "Measure X", (255, 210, 140))
     qt.draw_btn(had, 'hadamard',  (20, 70, 60),  (60, 220, 160),  "Hadamard",  (140, 255, 210))
 
+    _draw_level_indicator()
+    _draw_nav_arrows()
+
+
+def _draw_level_indicator():
+    import qubit_toy as qt
+    w, _ = qt.screen.get_size()
+    level = LEVELS[current_level]
+    dot_positions = get_level_dot_positions()
+
+    # Label left of the dots
+    label = qt.font_tab.render(f"Lv {current_level + 1}", True, (180, 160, 220))
+    lx = dot_positions[0][0] - label.get_width() - 10
+    qt.screen.blit(label, (lx, 28 - label.get_height() // 2))
+
+    for i, (dx, dy) in enumerate(dot_positions):
+        q = level[i]
+        d = LIGHT_DEFS[q]
+        if i < level_progress:
+            pygame.draw.circle(qt.screen, d["color_on"], (dx, dy), DOT_RADIUS)
+        else:
+            pygame.draw.circle(qt.screen, d["color_off"], (dx, dy), DOT_RADIUS)
+            pygame.draw.circle(qt.screen, d["color_on"],  (dx, dy), DOT_RADIUS, 2)
+
+
+def _draw_nav_arrows():
+    import qubit_toy as qt
+    left, right = get_nav_arrow_rects()
+    qt.draw_btn(left,  'nav_prev', (40, 30, 60), (120, 90, 160), "<", (200, 180, 240))
+    qt.draw_btn(right, 'nav_next', (40, 30, 60), (120, 90, 160), ">", (200, 180, 240))
+
+
+def _check_level_progress(lit_q):
+    global level_progress, level_complete_until
+    if level_complete_until:
+        return  # waiting to advance; ignore input
+    level = LEVELS[current_level]
+    if lit_q == level[level_progress]:
+        level_progress += 1
+        if level_progress == len(level):
+            level_complete_until = pygame.time.get_ticks() + 1500
+    else:
+        level_progress = 0
+
 
 def handle_click(pos):
     import qubit_toy as qt
-    global qubit_value, qubit_lit, qubit_flash_end
+    global qubit_value, qubit_lit, qubit_flash_end, current_level, level_progress
     mz, mx, had = get_qubit_btn_rects()
     if mz.collidepoint(pos):
         qt.flash_btn('measure_z')
         qubit_value = measure_z(qubit_value)
         qubit_lit = qubit_value
         qubit_flash_end = pygame.time.get_ticks() + 300
+        _check_level_progress(qubit_lit)
     if mx.collidepoint(pos):
         qt.flash_btn('measure_x')
         qubit_value = measure_x(qubit_value)
         qubit_lit = qubit_value
         qubit_flash_end = pygame.time.get_ticks() + 300
+        _check_level_progress(qubit_lit)
     if had.collidepoint(pos):
         qt.flash_btn('hadamard')
         qubit_value = hadamard(qubit_value)
 
+    if not level_complete_until:
+        left, right = get_nav_arrow_rects()
+        if left.collidepoint(pos):
+            qt.flash_btn('nav_prev')
+            current_level  = (current_level - 1) % len(LEVELS)
+            level_progress = 0
+        if right.collidepoint(pos):
+            qt.flash_btn('nav_next')
+            current_level  = (current_level + 1) % len(LEVELS)
+            level_progress = 0
+
 
 def tick():
-    global qubit_lit
+    global qubit_lit, current_level, level_progress, level_complete_until
     if qubit_lit and pygame.time.get_ticks() > qubit_flash_end:
         qubit_lit = None
+    if level_complete_until and pygame.time.get_ticks() >= level_complete_until:
+        current_level        = (current_level + 1) % len(LEVELS)
+        level_progress       = 0
+        level_complete_until = 0
