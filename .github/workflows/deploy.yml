@@ -35,7 +35,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: ./build/web
+          path: ./src/build/web
 
       - uses: actions/deploy-pages@v4
         id: deployment
