@@ -1,5 +1,4 @@
 import pygame
-import sys
 
 import bit_logic
 import qubit_logic
@@ -87,22 +86,3 @@ def draw():
     pygame.display.flip()
 
 
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit(); sys.exit()
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            pygame.quit(); sys.exit()
-
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            for i, rect in enumerate(get_tab_rects()):
-                if rect.collidepoint(event.pos):
-                    tab = i
-            if tab == 0:
-                bit_logic.handle_click(event.pos)
-            if tab == 1:
-                qubit_logic.handle_click(event.pos)
-
-    qubit_logic.tick()
-    draw()
-    clock.tick(60)
