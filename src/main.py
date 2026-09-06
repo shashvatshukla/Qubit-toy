@@ -12,13 +12,14 @@ async def main():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                pos = qt.scale_pos(event.pos)
                 for i, rect in enumerate(qt.get_tab_rects()):
-                    if rect.collidepoint(event.pos):
+                    if rect.collidepoint(pos):
                         qt.tab = i
                 if qt.tab == 0:
-                    qt.bit_logic.handle_click(event.pos)
+                    qt.bit_logic.handle_click(pos)
                 if qt.tab == 1:
-                    qt.qubit_logic.handle_click(event.pos)
+                    qt.qubit_logic.handle_click(pos)
         qt.qubit_logic.tick()
         qt.draw()
         qt.clock.tick(60)

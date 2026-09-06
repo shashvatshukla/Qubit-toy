@@ -5,6 +5,11 @@ import qubit_logic
 
 pygame.init()
 
+WIDTH, HEIGHT = 800, 600
+SWITCHER_HEIGHT = 60
+BUTTON_MARGIN = 10
+BUTTON_RADIUS = 8
+
 BIT_BG   = ( 20,  40,  80)
 QUBIT_BG = ( 18,  10,  35)
 
@@ -13,21 +18,15 @@ TAB_COLORS = [
     ("Qubit", (140,  60, 200)),
 ]
 
-screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
+display = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
 pygame.display.set_caption("Qubit Toy")
+screen = pygame.Surface((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
-_W, _H = screen.get_size()
-_scale = max(_H, 400) / 600
-
-SWITCHER_HEIGHT = int(60 * _scale)
-BUTTON_MARGIN   = int(10 * _scale)
-BUTTON_RADIUS   = int( 8 * _scale)
-
-font_large  = pygame.font.SysFont("Segoe UI", int(120 * _scale), bold=True)
-font_medium = pygame.font.SysFont("Segoe UI", int(22  * _scale), bold=True)
-font_tab    = pygame.font.SysFont("Segoe UI", int(16  * _scale), bold=True)
-font_state  = pygame.font.SysFont("Segoe UI", int(18  * _scale), bold=True)
+font_large  = pygame.font.SysFont("Segoe UI", 120, bold=True)
+font_medium = pygame.font.SysFont("Segoe UI", 22,  bold=True)
+font_tab    = pygame.font.SysFont("Segoe UI", 16,  bold=True)
+font_state  = pygame.font.SysFont("Segoe UI", 18,  bold=True)
 
 tab = 0
 
@@ -79,12 +78,16 @@ def draw_switcher():
         blit_centered(screen, font_tab.render(TAB_COLORS[i][0], True, (255, 255, 255)),
                       rect.centerx, rect.centery)
 
+def scale_pos(pos):
+    """Map a display pixel coordinate to the logical 800x600 canvas coordinate."""
+    dw, dh = display.get_size()
+    return (pos[0] * WIDTH // dw, pos[1] * HEIGHT // dh)
+
 def draw():
     if tab == 0:
         bit_logic.draw_bit_screen()
     else:
         qubit_logic.draw_qubit_screen()
     draw_switcher()
+    pygame.transform.smoothscale(screen, display.get_size(), display)
     pygame.display.flip()
-
-

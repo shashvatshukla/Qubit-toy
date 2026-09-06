@@ -11,11 +11,10 @@ BTN_COLORS = [(50,130,220),(50,170,80),(200,140,30),(170,60,200)]
 def get_action_button_rects():
     import qubit_toy as qt
     w, h = qt.screen.get_size()
-    s = qt._scale
-    btn_w, btn_h = int(130 * s), int(50 * s)
-    gap = int(18 * s)
+    btn_w, btn_h = 130, 50
+    gap = 18
     start_x = (w - (4 * btn_w + 3 * gap)) // 2
-    y = h - qt.SWITCHER_HEIGHT - btn_h - int(60 * s)
+    y = h - qt.SWITCHER_HEIGHT - btn_h - 60
     return [pygame.Rect(start_x + i * (btn_w + gap), y, btn_w, btn_h) for i in range(4)]
 
 
@@ -23,9 +22,9 @@ def draw_bit_screen():
     import qubit_toy as qt
     w, h = qt.screen.get_size()
     qt.screen.fill(qt.BIT_BG)
-    box_size = int(160 * qt._scale)
+    box_size = 160
     box_rect = pygame.Rect((w - box_size) // 2,
-                           (h - qt.SWITCHER_HEIGHT) // 2 - box_size // 2 - int(40 * qt._scale),
+                           (h - qt.SWITCHER_HEIGHT) // 2 - box_size // 2 - 40,
                            box_size, box_size)
     qt.rrect(qt.screen, (30, 60, 120), box_rect, radius=16)
     qt.rrect(qt.screen, (30, 60, 120), box_rect, radius=16, border=2, border_color=(80, 140, 255))
