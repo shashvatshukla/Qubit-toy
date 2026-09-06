@@ -5,11 +5,6 @@ import qubit_logic
 
 pygame.init()
 
-WIDTH, HEIGHT = 800, 600
-SWITCHER_HEIGHT = 60
-BUTTON_MARGIN = 10
-BUTTON_RADIUS = 8
-
 BIT_BG   = ( 20,  40,  80)
 QUBIT_BG = ( 18,  10,  35)
 
@@ -18,15 +13,26 @@ TAB_COLORS = [
     ("Qubit", (140,  60, 200)),
 ]
 
+# Render at 2x internally so downscaling to any display is always sharp.
+CANVAS_W, CANVAS_H = 1600, 1200
+_scale = 2.0
+
 display = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
 pygame.display.set_caption("Qubit Toy")
-screen = pygame.Surface((WIDTH, HEIGHT))
-clock = pygame.time.Clock()
+screen  = pygame.Surface((CANVAS_W, CANVAS_H))
+clock   = pygame.time.Clock()
 
-font_large  = pygame.font.SysFont("Segoe UI", 120, bold=True)
-font_medium = pygame.font.SysFont("Segoe UI", 22,  bold=True)
-font_tab    = pygame.font.SysFont("Segoe UI", 16,  bold=True)
-font_state  = pygame.font.SysFont("Segoe UI", 18,  bold=True)
+def _s(n, minimum=1):
+    return max(minimum, int(n * _scale))
+
+SWITCHER_HEIGHT = _s(60)
+BUTTON_MARGIN   = _s(10)
+BUTTON_RADIUS   = _s( 8)
+
+font_large  = pygame.font.SysFont("Segoe UI", _s(120), bold=True)
+font_medium = pygame.font.SysFont("Segoe UI", _s( 22), bold=True)
+font_tab    = pygame.font.SysFont("Segoe UI", _s( 16), bold=True)
+font_state  = pygame.font.SysFont("Segoe UI", _s( 18), bold=True)
 
 tab = 0
 
@@ -79,9 +85,9 @@ def draw_switcher():
                       rect.centerx, rect.centery)
 
 def scale_pos(pos):
-    """Map a display pixel coordinate to the logical 800x600 canvas coordinate."""
+    """Map a display pixel to the internal 1600×1200 canvas coordinate."""
     dw, dh = display.get_size()
-    return (pos[0] * WIDTH // dw, pos[1] * HEIGHT // dh)
+    return (pos[0] * CANVAS_W // dw, pos[1] * CANVAS_H // dh)
 
 def draw():
     if tab == 0:

@@ -56,11 +56,9 @@ LIGHT_DEFS = {
     Q.PLUS:  {"label": "+",      "color_on": (255, 180,  60), "color_off": ( 70,  50,  20)},
     Q.MINUS: {"label": "\u2212", "color_on": (220,  80, 255), "color_off": ( 60,  20,  70)},
 }
-LIGHT_RADIUS = 28
-LIGHT_GLOW_R = 54
-
-DOT_RADIUS = 10
-DOT_GAP    = 30
+def _s(n):
+    import qubit_toy as qt
+    return qt._s(n)
 
 
 def get_light_positions():
@@ -80,9 +78,10 @@ def get_qubit_btn_rects():
     pos = get_light_positions()
     sx, sy = pos[Q.ONE]
     ex, ey = pos[Q.PLUS]
-    bw, bh = 130, 44
-    mz  = pygame.Rect(sx - bw // 2, sy + 46, bw, bh)
-    mx  = pygame.Rect(ex + 46, ey - bh // 2, bw, bh)
+    bw, bh = _s(130), _s(44)
+    gap = _s(46)
+    mz  = pygame.Rect(sx - bw // 2, sy + gap, bw, bh)
+    mx  = pygame.Rect(ex + gap, ey - bh // 2, bw, bh)
     had = pygame.Rect(mx.x, mz.y, bw, bh)
     return mz, mx, had
 
@@ -90,19 +89,18 @@ def get_level_dot_positions():
     import qubit_toy as qt
     w, _ = qt.screen.get_size()
     n = len(LEVELS[current_level])
-    margin = 18
-    end_x = w - margin - DOT_RADIUS
-    start_x = end_x - (n - 1) * DOT_GAP
-    return [(start_x + i * DOT_GAP, 28) for i in range(n)]
+    dot_gap = min(_s(30), (w - _s(36) * 2) // max(n, 1))
+    end_x = w - _s(18) - _s(10)
+    start_x = end_x - (n - 1) * dot_gap
+    return [(start_x + i * dot_gap, _s(28)) for i in range(n)]
 
 def get_nav_arrow_rects():
     import qubit_toy as qt
     w, _ = qt.screen.get_size()
-    bw, bh = 44, 28
-    margin = 18
-    right_edge = w - margin
-    right = pygame.Rect(right_edge - bw,          62, bw, bh)
-    left  = pygame.Rect(right_edge - bw * 2 - 8,  62, bw, bh)
+    bw, bh = _s(44), _s(28)
+    right_edge = w - _s(18)
+    right = pygame.Rect(right_edge - bw,           _s(62), bw, bh)
+    left  = pygame.Rect(right_edge - bw*2 - _s(8), _s(62), bw, bh)
     return left, right
 
 
@@ -129,8 +127,8 @@ def draw_qubit_screen():
         lit   = qubit_lit == key
         color = d["color_on"]  if lit else d["color_off"]
         g_col = d["color_on"]  if lit else (50, 40, 70)
-        g_r   = LIGHT_GLOW_R   if lit else LIGHT_RADIUS + 8
-        _draw_glow_circle(qt.screen, lx, ly, LIGHT_RADIUS, color, g_r, g_col)
+        lr = _s(28); gr = _s(54) if lit else lr + _s(8)
+        _draw_glow_circle(qt.screen, lx, ly, lr, color, gr, g_col)
         state_col = (255, 255, 255) if lit else (80, 65, 100)
         qt.blit_centered(qt.screen, qt.font_state.render(d["label"], True, state_col), lx, ly)
 
@@ -157,11 +155,12 @@ def _draw_level_indicator():
     for i, (dx, dy) in enumerate(dot_positions):
         q = level[i]
         d = LIGHT_DEFS[q]
+        dr = _s(10)
         if i < level_progress:
-            pygame.draw.circle(qt.screen, d["color_on"], (dx, dy), DOT_RADIUS)
+            pygame.draw.circle(qt.screen, d["color_on"], (dx, dy), dr)
         else:
-            pygame.draw.circle(qt.screen, d["color_off"], (dx, dy), DOT_RADIUS)
-            pygame.draw.circle(qt.screen, d["color_on"],  (dx, dy), DOT_RADIUS, 2)
+            pygame.draw.circle(qt.screen, d["color_off"], (dx, dy), dr)
+            pygame.draw.circle(qt.screen, d["color_on"],  (dx, dy), dr, 2)
 
 
 def _draw_nav_arrows():
