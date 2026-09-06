@@ -5,11 +5,6 @@ import qubit_logic
 
 pygame.init()
 
-WIDTH, HEIGHT = 800, 600
-SWITCHER_HEIGHT = 60
-BUTTON_MARGIN = 10
-BUTTON_RADIUS = 8
-
 BIT_BG   = ( 20,  40,  80)
 QUBIT_BG = ( 18,  10,  35)
 
@@ -18,14 +13,21 @@ TAB_COLORS = [
     ("Qubit", (140,  60, 200)),
 ]
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
 pygame.display.set_caption("Qubit Toy")
 clock = pygame.time.Clock()
 
-font_large  = pygame.font.SysFont("Segoe UI", 120, bold=True)
-font_medium = pygame.font.SysFont("Segoe UI", 22,  bold=True)
-font_tab    = pygame.font.SysFont("Segoe UI", 16,  bold=True)
-font_state  = pygame.font.SysFont("Segoe UI", 18,  bold=True)
+_W, _H = screen.get_size()
+_scale = max(_H, 400) / 600
+
+SWITCHER_HEIGHT = int(60 * _scale)
+BUTTON_MARGIN   = int(10 * _scale)
+BUTTON_RADIUS   = int( 8 * _scale)
+
+font_large  = pygame.font.SysFont("Segoe UI", int(120 * _scale), bold=True)
+font_medium = pygame.font.SysFont("Segoe UI", int(22  * _scale), bold=True)
+font_tab    = pygame.font.SysFont("Segoe UI", int(16  * _scale), bold=True)
+font_state  = pygame.font.SysFont("Segoe UI", int(18  * _scale), bold=True)
 
 tab = 0
 
